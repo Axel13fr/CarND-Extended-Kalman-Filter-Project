@@ -35,6 +35,11 @@ private:
 
   void SetRadarMatrices();
   void SetLaserMatrices();
+  /**
+   * @brief UpdateFandQ uses the measurement timestamp to update the F and Q matrices based on delta T
+   * @param measurement_pack
+   */
+  void UpdateFandQ(const MeasurementPackage &measurement_pack);
 
   // check whether the tracking toolbox was initiallized or not (first measurement)
   bool is_initialized_;
@@ -42,13 +47,11 @@ private:
   // previous timestamp
   long long previous_timestamp_;
 
-  // tool object used to compute Jacobian and RMSE
-  Tools tools;
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
-  void UpdateFandQ(const MeasurementPackage &measurement_pack);
+
 };
 
 #endif /* FusionEKF_H_ */

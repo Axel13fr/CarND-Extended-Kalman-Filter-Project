@@ -5,10 +5,6 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using std::vector;
 
-Tools::Tools() {}
-
-Tools::~Tools() {}
-
 VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
                               const vector<VectorXd> &ground_truth) {
 
@@ -47,6 +43,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
     //check division by zero
     if(fabs(c1) < 0.0001){
         std::cout << "CalculateJacobian () - Error - Division by Zero" << std::endl;
+        assert(false);
         return Hj;
     }
 
@@ -60,10 +57,9 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 
 Eigen::VectorXd Tools::CalculatePosFromRadar(const Eigen::VectorXd &radar_mes)
 {
-    auto ro = radar_mes(0);
-    auto theta = radar_mes(1);
-    auto ro_dot = radar_mes(2);
-    auto state = VectorXd(4);
+    auto ro = radar_mes(RO);
+    auto theta = radar_mes(THETA);
+    auto state = VectorXd(STATE_SIZE);
     // x,y, Vx, Vy
     state << ro*std::cos(theta) , ro*std::sin(theta) ,
             0 , 0;
@@ -71,4 +67,37 @@ Eigen::VectorXd Tools::CalculatePosFromRadar(const Eigen::VectorXd &radar_mes)
     return state;
 }
 
+Eigen::VectorXd Tools::TransformToRadarFromState(const Eigen::VectorXd &state)
+{
+    // state = x,y, Vx, Vy
+    auto ro = sqrt(state(X)*state(X) + state(Y)*state(Y));
+    auto theta = atan2(state(Y),state(X));
+    assert(theta <= M_PI and theta >= -M_PI);
 
+    auto c1 = state(X)*state(Vx) + state(Y)*state(Vy);
+    assert(fabs(c1) > 0.0001);
+    assert(fabs(ro) > 0.0001);
+    auto ro_dot = c1 / ro;
+
+    auto rad_mes = VectorXd(RAD_MES_SIZE);
+    rad_mes << ro , theta, ro_dot;
+
+    return rad_mes;
+}
+
+void Tools::NormalizeDeltaPhi(VectorXd& y)
+{
+    auto delta_phi = y(THETA);
+    auto norm_delta_phi = fmod(delta_phi,2*M_PI);
+    if(norm_delta_phi > M_PI){
+        norm_delta_phi -= 2*M_PI;
+    }else if(norm_delta_phi < -M_PI){
+        norm_delta_phi += 2*M_PI;
+    }else{
+        // Already normalized, we are cool
+    }
+
+    assert((norm_delta_phi <= M_PI) and (norm_delta_phi >= -M_PI));
+    // save norm. result !
+    y(THETA) = norm_delta_phi;
+}

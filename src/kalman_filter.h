@@ -66,6 +66,7 @@ public:
 
   void setH(const Eigen::MatrixXd &H);
   void setR(const Eigen::MatrixXd &R);
+
 };
 
 #endif /* KALMAN_FILTER_H_ */

@@ -50,17 +50,21 @@ void KalmanFilter::Update(const VectorXd &z) {
     P_ = (I - K * H_) * P_;
 }
 
+
+
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
     /*
      * KF Measurement update step : radar case
      * H and R must be set appropriately before the call !
      */
-    VectorXd y = z - H_ * x_;
+    VectorXd y = z - Tools::TransformToRadarFromState(x_);
+    Tools::NormalizeDeltaPhi(y);
+
     MatrixXd S = H_ * P_ * H_.transpose() + R_;
-    auto K =  P_ * H_.transpose() * S.inverse();
+    MatrixXd K =  P_ * H_.transpose() * S.inverse();
 
     //new state
     x_ = x_ + (K * y);
-    auto I = MatrixXd::Identity(3, 3);
+    auto I = MatrixXd::Identity(4, 4);
     P_ = (I - K * H_) * P_;
 }
