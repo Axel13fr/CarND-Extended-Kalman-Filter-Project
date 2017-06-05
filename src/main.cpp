@@ -42,8 +42,9 @@ int main()
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
-
-    if (length && length > 2 && data[0] == '4' && data[1] == '2')
+    constexpr auto WEBSOCKET_MSG = '4';
+    constexpr auto WEBSOCKET_EVENT = '2';
+    if (length && length > 2 && data[0] == WEBSOCKET_MSG && data[1] == WEBSOCKET_EVENT)
     {
 
       auto s = hasData(std::string(data));
@@ -75,7 +76,7 @@ int main()
           		iss >> py;
           		meas_package.raw_measurements_ << px, py;
           		iss >> timestamp;
-          		meas_package.timestamp_ = timestamp;
+                meas_package.timestamp_us_ = timestamp;
           } else if (sensor_type.compare("R") == 0) {
 
       	  		meas_package.sensor_type_ = MeasurementPackage::RADAR;
@@ -88,7 +89,7 @@ int main()
           		iss >> ro_dot;
           		meas_package.raw_measurements_ << ro,theta, ro_dot;
           		iss >> timestamp;
-          		meas_package.timestamp_ = timestamp;
+                meas_package.timestamp_us_ = timestamp;
           }
           float x_gt;
     	  float y_gt;
@@ -109,7 +110,6 @@ int main()
     	  fusionEKF.ProcessMeasurement(meas_package);    	  
 
     	  //Push the current estimated x,y positon from the Klaman filter's state vector
-
     	  VectorXd estimate(4);
 
     	  double p_x = fusionEKF.ekf_.x_(0);

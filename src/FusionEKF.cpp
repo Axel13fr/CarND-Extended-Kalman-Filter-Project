@@ -21,13 +21,9 @@ FusionEKF::FusionEKF() {
     R_radar_ = MatrixXd(3, 3);
     H_laser_ = MatrixXd(2, 4);
     H_laser_ << 1,0,0,0,
-            0,1,0,0;
+                0,1,0,0;
     Hj_ = MatrixXd(3, 4);
-    auto Q = MatrixXd(4, 4);
-    Q << 0,0,0,0,
-            0,0,0,0,
-            0,0,0,0,
-            0,0,0,0;
+    MatrixXd Q = MatrixXd::Zero(4,4);
 
     //measurement covariance matrix - laser
     R_laser_ << 0.0225, 0,
@@ -71,7 +67,7 @@ void FusionEKF::SetLaserMatrices()
 void FusionEKF::UpdateFandQ(const MeasurementPackage &measurement_pack)
 {
     constexpr double MICROSECS_TO_SECS = 1/1000000.0;
-    auto delta_t = (measurement_pack.timestamp_ - previous_timestamp_)*MICROSECS_TO_SECS;
+    auto delta_t = (measurement_pack.timestamp_us_ - previous_timestamp_)*MICROSECS_TO_SECS;
     // F update
     ekf_.F_ << 1,0,delta_t,0,
             0,1,0,delta_t,
@@ -131,7 +127,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
                     0.1,0.1;
         }
 
-        previous_timestamp_ = measurement_pack.timestamp_;
+        previous_timestamp_ = measurement_pack.timestamp_us_;
         // done initializing, no need to predict or update
         is_initialized_ = true;
         return;
@@ -149,7 +145,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
     UpdateFandQ(measurement_pack);
     ekf_.Predict();
-    cout << "Predicted pos x_ = " << ekf_.x_(0) << " y_ = " << ekf_.x_(1)  << " Vx_ = " << ekf_.x_(2) << " Vy_ = " << ekf_.x_(3) << endl;
 
     /*****************************************************************************
    *  Update
@@ -159,13 +154,13 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
         // Radar updates
         SetRadarMatrices();
         ekf_.UpdateEKF(measurement_pack.raw_measurements_);
-        previous_timestamp_ = measurement_pack.timestamp_;
+        previous_timestamp_ = measurement_pack.timestamp_us_;
 
     } else {
         // Laser updates
         SetLaserMatrices();
         ekf_.Update(measurement_pack.raw_measurements_);
-        previous_timestamp_ = measurement_pack.timestamp_;
+        previous_timestamp_ = measurement_pack.timestamp_us_;
     }
 
     // print the output
