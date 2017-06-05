@@ -32,6 +32,10 @@ public:
   KalmanFilter ekf_;
 
 private:
+
+  void SetRadarMatrices();
+  void SetLaserMatrices();
+
   // check whether the tracking toolbox was initiallized or not (first measurement)
   bool is_initialized_;
 
@@ -44,6 +48,7 @@ private:
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+  void UpdateFandQ(const MeasurementPackage &measurement_pack);
 };
 
 #endif /* FusionEKF_H_ */
